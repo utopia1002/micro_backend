@@ -59,16 +59,3 @@ class MyUser(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
-
-
-
-class Category(models.Model):
-    name = models.CharField(max_length=40, null=False)
-
-class Real_estate(models.Model):
-    name = models.CharField(max_length=40, null=False)
-    detail = models.TextField(max_length=300, null=False)
-    # image = models.ImageField(blank=True)  #나중에 blank=False로 수정
-    price = models.IntegerField(default=0)
-    upload_date = models.DateTimeField(default=timezone.now) #timezone import
-    category = models.ForeignKey(Category, null=False, on_delete=models.CASCADE)
