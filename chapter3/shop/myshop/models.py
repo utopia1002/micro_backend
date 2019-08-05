@@ -1,7 +1,33 @@
 from django.db import models
+from django.utils import timezone
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+import uuid
 
-# Create your models here.
-class MyUser(AbstarctBaseUser, PermissionsMixin):
+class MyUserManager(BaseUserManager):
+    #유저 생성
+    def _create_user(self, email, name , password=None, **kwargs):
+        if not email:
+            raise ValueError('이메일은 필수입니다')
+        if not name:
+            raise ValueError('유저명은 필수입니다')
+        # 이메일에 포함된 대문자를 소문자로 바꿈
+        user = self.model(email=self.normalize_email(email),**kwargs)
+
+        user.set_password(password)
+        user.save(using=self._db)
+    # 일반유저 생성 _create_user를 사용함
+    def create_user(self, email, name, password, **kwargs):
+        kwargs.setdefault('is_admin', False)
+        return self._create_user(email, name, password, **kwargs)
+    # 관리자 계정 생성
+    def create_superuser(self, email, name, password, **kwargs):
+        kwargs.setdefault('is_admin', True)
+        kwargs.setdefault('is_staff', True)
+        kwargs.setdefault('is_superuser', True)
+
+        return self._create_user(email, name, password, **kwargs)
+
+class MyUser(AbstractBaseUser, PermissionsMixin):
     # pk설정
     uuid = models.UUIDField(
         primary_key = True,
@@ -34,26 +60,15 @@ class MyUser(AbstarctBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
 
-class MyUserManager(BaseUserManager):
-    #유저 생성
-    def _create_user(self, email, name , password=None, **kwargs):
-        if not email:
-            raise ValueError('이메일은 필수입니다')
-        if not name:
-            raise ValueError('유저명은 필수입니다')
-        # 이메일에 포함된 대문자를 소문자로 바꿈
-        user = self.model(email=self.normalize_email(email),**kwargs)
 
-        user.set_password(password)
-        user.save(using=self._db)
-    # 일반유저 생성 _create_user를 사용함
-    def create_user(self, email, name, password, **kwargs):
-        kwargs.setdefault('is_admin', False)
-        return self._create_user(email, name, password, **kwargs)
-    # 관리자 계정 생성
-    def create_superuser(self, email, name, password, **kwargs):
-        kwargs.setdefault('is_admin', True)
-        kwargs.setdefault('is_staff', True)
-        kwargs.setdefault('is_superuser', True)
 
-        return self._create_user(email, name, password, **kwargs)
+class Category(models.Model):
+    name = models.CharField(max_length=40, null=False)
+
+class Real_estate(models.Model):
+    name = models.CharField(max_length=40, null=False)
+    detail = models.TextField(max_length=300, null=False)
+    # image = models.ImageField(blank=True)  #나중에 blank=False로 수정
+    price = models.IntegerField(default=0)
+    upload_date = models.DateTimeField(default=timezone.now) #timezone import
+    category = models.ForeignKey(Category, null=False, on_delete=models.CASCADE)
